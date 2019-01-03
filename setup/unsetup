@@ -1,0 +1,23 @@
+#!/bin/bash
+
+dbase=$( grep -oP '(?<=dbase=).*$' setup )
+
+if [ "${dbase}" ]; then
+    mysql -e "DROP DATABASE ${dbase}"
+fi
+
+if [ -f Person.sql ]; then
+    rm Person.sql
+fi
+
+cd ../site
+if [ -d includes ]; then
+    unlink includes
+    rm *
+fi
+
+cd ../generated
+rm *.s*
+
+
+

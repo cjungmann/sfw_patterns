@@ -1,0 +1,77 @@
+#!/bin/bash
+
+dbase=SFW_Simple
+
+copy_and_modify_default_stylesheet()
+{
+    sed "s|\*\*Default.*\*\*|${dbase} Demo|g" /usr/local/lib/schemafw/default.xsl > ../site/default.xsl
+}
+
+install_framework_to_site()
+{
+   cd ../site
+   if [  -d includes ]; then
+       echo "Framework already installed" >&2
+   else
+       ln -s /usr/local/lib/schemafw/web_includes includes
+       copy_and_modify_default_stylesheet
+   fi
+
+   cd ../setup
+}
+
+prepare_generated_files()
+{
+    cd ../generated
+    gensfw Person.gsf -c save
+    cd ../setup
+    cp -s ../generated/Person.sql .
+    cd ../site
+    cp -s ../generated/Person.srm .
+}
+
+create_database()
+{
+    # -r (raw) to omit tabular ouput
+    # -N (--skip-column-names)
+    local -a cmd=(
+        information_schema
+        -r
+        -N
+        -e "SELECT COUNT(*) FROM SCHEMATA WHERE SCHEMA_NAME='$dbase'"
+    )
+
+    local -i is_installed=$( mysql "${cmd[@]}" )
+    echo $is_installed
+
+    if [ $is_installed -eq 0 ]; then
+        echo "Creating a new database"
+        mysql -e "CREATE DATABASE IF NOT EXISTS $dbase"
+        echo "Loading script files"
+        mysql -f "${dbase}" < /usr/local/lib/SchemaServer/install/sys_procs.sql
+    fi
+}
+
+load_scripts()
+{
+    cd ../setup
+
+    declare -a scripts=( $( ls --hide=tables*.sql *.sql ) )
+
+    mysql "$dbase" < tables.sql
+
+    for script in "${scripts[@]}"; do
+        echo "Loading script file ${script}:"
+        mysql "$dbase" < "${script}"
+    done
+}
+
+
+create_database
+load_scripts                # Load the sole SQL script, tables.sql, prior to using gensfw
+
+install_framework_to_site
+
+prepare_generated_files
+load_scripts                # reload scripts, which will now include Person.sql
+
