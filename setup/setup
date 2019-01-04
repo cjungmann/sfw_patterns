@@ -2,6 +2,21 @@
 
 dbase=SFW_Simple
 
+create_missing_directories()
+{
+    cd ..
+    if [ ! -d generated ]; then
+        echo "Creating directory 'generated'" >&2
+        mkdir generated
+    fi
+    if [ ! -d site ]; then
+        echo "Creating directory 'site'" >&2
+        mkdir site
+    fi
+
+    cd setup
+}
+
 copy_and_modify_default_stylesheet()
 {
     sed "s|\*\*Default.*\*\*|${dbase} Demo|g" /usr/local/lib/schemafw/default.xsl > ../site/default.xsl
@@ -10,6 +25,7 @@ copy_and_modify_default_stylesheet()
 install_framework_to_site()
 {
    cd ../site
+
    if [  -d includes ]; then
        echo "Framework already installed" >&2
    else
@@ -52,6 +68,58 @@ create_database()
     fi
 }
 
+create_gsfs_from_tables_in_database()
+{
+    local table
+    local -a tables
+    local -a query=(
+        "SELECT TABLE_NAME"
+        "FROM information_schema.TABLES"
+        "WHERE SCHEMA_NAME='${dbase}'"
+        "AND NOT( TABLE_NAME = 'SSYS_SESSION')"
+        )
+
+    tables=( $( mysql -BN -e "${query[@]}" ) )
+
+    cd ../generated
+
+    for table in "${tables[@]}"; do
+        gensfw -d "${dbase}" -t "${table}" -c save
+    done
+
+    cd ../setup
+    cp -s ../generated/*.sql .
+
+    cd ../site
+    cp -s ../generated/*.srm .
+
+    cd ../setup
+
+    
+}
+
+read_tables_from_tables()
+{
+    local IFS=$'\n'
+    local -a tables
+    local -a words
+    local -i cwords
+    local -a lines=( $( grep -i 'CREATE TABLE' tables.sql ) )
+    IFS=$' '
+    local line
+
+    for line in "${lines[@]}"; do
+        words=( $line )
+        cwords="${#words[@]}"
+        
+        tables=( "${tables[@]}" "${words[${words}-1]}" )
+    done
+
+    echo "There are ${#tables[@]} table definitions" >&2
+    printf "'\s'\n" "${tables[@]}" >&2
+
+}
+
 load_scripts()
 {
     cd ../setup
@@ -66,12 +134,15 @@ load_scripts()
     done
 }
 
-
-create_database
-load_scripts                # Load the sole SQL script, tables.sql, prior to using gensfw
-
+create_missing_directories
 install_framework_to_site
 
-prepare_generated_files
-load_scripts                # reload scripts, which will now include Person.sql
+# create_database
+# load_scripts                # Load the sole SQL script, tables.sql, prior to using gensfw
+
+# create_gsfs_from_tables_in_database
+
+
+# prepare_generated_files
+# load_scripts                # reload scripts, which will now include Person.sql
 
