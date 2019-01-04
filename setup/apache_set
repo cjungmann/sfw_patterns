@@ -2,7 +2,6 @@
 
 declare DEF_SITE_NAME=sfw_simple
 declare DEF_DBASE_NAME=SFW_Simple
-declare DEF_SITE_INDEX=Person.srm
 
 declare DEF_CONF_FILE="
 <VirtualHost *:80>
@@ -33,6 +32,25 @@ show_usage()
     echo >&2
 }
 
+get_first_table_as_site_index()
+{
+    local -a query=(
+        "SELECT TABLE_NAME"
+        "FROM information_schema.TABLES"
+        "WHERE TABLE_SCHEMA='${DEF_DBASE_NAME}'"
+        "AND NOT( TABLE_NAME = 'SSYS_SESSION')"
+        "ORDER BY CREATE_TIME"
+        "LIMIT 1"
+        )
+
+    local first_table
+    first_table=$( mysql -BN -e "${query[*]}" )
+    if [ $? -eq 0 ]; then
+        echo "first table is '${first_table}'" >&2
+        echo "${first_table}.srm"
+    fi
+}
+
 # Preserve parameter count for boolean function:
 declare -i CMD_ARGC=$#
 
@@ -53,10 +71,10 @@ fi
 
 # Identify parameter values with names:
 declare ACTION="$1"
-declare site_index="${DEF_SITE_INDEX}"
 declare site_name="${DEF_SITE_NAME}"
-declare -i update_hosts=0
+declare site_index=$( get_first_table_as_site_index )
 
+declare -i update_hosts=0
 declare PARM
 for PARM in "${@:2}"; do
     if [ $PARM = '-h' ]; then
