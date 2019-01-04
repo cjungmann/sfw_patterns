@@ -1,23 +1,141 @@
 #!/bin/bash
 
-dbase=$( grep -oP '(?<=dbase=).*$' setup )
+find_array_index()
+{
+    local needle="$1"
+    local -i ndx=0
+    local elval
+    for elval in "${@:2}"; do
+        if [ "$elval" = "$needle" ]; then
+            echo "${ndx}"
+            return 0
+        fi
+        (( ++ndx ))
+    done
+    return 1
+}
 
-if [ "${dbase}" ]; then
-    mysql -e "DROP DATABASE ${dbase}"
-fi
+confirm_database()
+{
+    local -a query=(
+        "SELECT COUNT(*)"
+        "FROM information_schema.SCHEMATA"
+        "WHERE SCHEMA_NAME='$1'"
+    )
 
-if [ -f Person.sql ]; then
-    rm Person.sql
-fi
+    local -i scount
 
-cd ../site
-if [ -d includes ]; then
-    unlink includes
-    rm *
-fi
+    if scount=$( mysql -BN -e "${query[*]}" ); then
+        if [ $scount -eq 1 ]; then
+            return 0
+        fi
+    fi
 
-cd ../generated
-rm *.s*
+    return 1
+}
+
+remove_database()
+{
+    echo "Looking for database name in setup file to delete."
+    
+    cd ../setup
+
+    if [ -f setup ]; then
+        dbase=$( grep -oP '(?<=dbase=).*$' setup )
+
+        if confirm_database "${dbase}"; then
+            if [ "${dbase}" ]; then
+                echo "Dropping database '${dbase}'"
+                mysql -e "DROP DATABASE ${dbase}"
+            fi
+        else
+            echo "Database '${dbase}' does not exist.  No action taken."
+        fi
+    else
+        echo "Failed to discover database name due to missing 'setup' file."
+    fi
+}
+
+remove_setup_sqls()
+{
+    echo "Looking for 'setup' files to delete."
+
+    cd ../setup
+    local -a files=( $( ls *.sql ) )
+    local -i ndx
+
+    if ndx=$( find_array_index "tables.sql" "${files[@]}" ); then
+        unset files[$ndx]
+        sql_files=( "${files[@]}" )
+    fi
+
+    if [ "${#files[@]}" -gt 0 ]; then
+        echo -n "Removing"
+        printf " '%s'" "${files[@]}"
+        echo " from the 'setup' directory."
+
+        rm "${files[@]}"
+    fi
+}
+
+remove_site_stuff()
+{
+    echo "Looking for 'site' files to delete."
+
+    cd ../site
+    local -a files=( $( ls -p ) )
+    local fname
+    local -i ndx=0
+
+    # remove directories from list
+    for fname in "${files[@]}"; do
+        if [ "${fname[0]}" = "/" ]; then
+            unset files[$ndx]
+        fi
+    done
+
+    files=( "${files[@]}" )
+
+    if [ "${#files[@]}" -gt 0 ]; then
+        echo -n "Removing"
+        printf " '%s'" "${files[@]}"
+        echo " from the 'site' directory."
+
+        rm "${files[@]}"
+    fi
+
+    if [ -d includes ]; then
+        echo "Removing includes line from 'site' directory."
+        unlink includes
+    fi
+}
+
+remove_generated_files()
+{
+    echo "Looking for 'generated' files to delete."
+
+    cd ../generated
+
+    local -a files=( $( ls ) )
+
+    if [ "${#files[@]}" -gt 0 ]; then
+        echo -n "Removing"
+        printf " '%s'" "${files[@]}"
+        echo " from the 'generated' directory."
+
+        rm "${files[@]}"
+    fi
+
+    cd ../site
+}
+
+remove_database
+
+remove_setup_sqls
+remove_site_stuff
+remove_generated_files
+
+
 
 
 
