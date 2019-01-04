@@ -84,7 +84,7 @@ create_autoload_srm()
     printf "%s\n" "${lines[@]}" > autoload.srm
 }
 
-create_gsfs_from_tables_in_database()
+create_and_distribute_generated_files()
 {
     local table
     local -a tables
@@ -104,11 +104,6 @@ create_gsfs_from_tables_in_database()
 
     cd ../generated
     create_generated_files "${tables[@]}"
-
-    # for table in "${tables[@]}"; do
-    #     echo "About to create '${table}.gsf'" >&2
-    #     gensfw -d "${dbase}" -t "${table}" -c save
-    # done
 
     cd ../setup
     cp -fs ../generated/*.sql .
@@ -142,8 +137,6 @@ install_framework_to_site
 create_database
 load_scripts                # Load the sole SQL script, tables.sql, prior to using gensfw
 
-create_gsfs_from_tables_in_database
-
-
-# load_scripts                # reload scripts, which will now include Person.sql
+create_and_distribute_generated_files
+load_scripts                # reload scripts, which will now include Person.sql
 
