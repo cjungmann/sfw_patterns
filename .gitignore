@@ -1,6 +1,9 @@
 setup/installed_site.txt
-setup/Person.sql
+setup/*.sql
+!setup/tables.sql
+
 site/default.xsl
 site/includes
-site/Person.srm
-generated/Person.s*
+site/*.srm
+
+generated/*
