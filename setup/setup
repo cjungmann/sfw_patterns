@@ -36,16 +36,6 @@ install_framework_to_site()
    cd ../setup
 }
 
-prepare_generated_files()
-{
-    cd ../generated
-    gensfw Person.gsf -c save
-    cd ../setup
-    cp -s ../generated/Person.sql .
-    cd ../site
-    cp -s ../generated/Person.srm .
-}
-
 create_database()
 {
     # -r (raw) to omit tabular ouput
@@ -68,6 +58,32 @@ create_database()
     fi
 }
 
+create_generated_files()
+{
+    local tname
+    for tname in "${@}"; do
+        gensfw -d "${dbase}" -t "${tname}" -c save
+    done
+}
+
+create_autoload_srm()
+{
+    local -a lines=(
+        "\$shared : autoload_page"
+        "   navigation")
+
+    local tname
+    for tname in "${@}"; do
+        lines=( "${lines[@]}"
+                "      target"
+                "         label : ${tname}"
+                "         url   : ${tname}.srm"
+              )
+    done
+
+    printf "%s\n" "${lines[@]}" > autoload.srm
+}
+
 create_gsfs_from_tables_in_database()
 {
     local table
@@ -75,49 +91,35 @@ create_gsfs_from_tables_in_database()
     local -a query=(
         "SELECT TABLE_NAME"
         "FROM information_schema.TABLES"
-        "WHERE SCHEMA_NAME='${dbase}'"
+        "WHERE TABLE_SCHEMA='${dbase}'"
         "AND NOT( TABLE_NAME = 'SSYS_SESSION')"
+        "ORDER BY CREATE_TIME"
         )
 
-    tables=( $( mysql -BN -e "${query[@]}" ) )
+    tables=( $( mysql -BN -e "${query[*]}" ) )
+
+    echo -n "About to process tables" >&2
+    printf " '%s'" "${tables[@]}" >&2
+    echo >&2
 
     cd ../generated
+    create_generated_files "${tables[@]}"
 
-    for table in "${tables[@]}"; do
-        gensfw -d "${dbase}" -t "${table}" -c save
-    done
+    # for table in "${tables[@]}"; do
+    #     echo "About to create '${table}.gsf'" >&2
+    #     gensfw -d "${dbase}" -t "${table}" -c save
+    # done
 
     cd ../setup
-    cp -s ../generated/*.sql .
+    cp -fs ../generated/*.sql .
 
     cd ../site
-    cp -s ../generated/*.srm .
+    cp -fs ../generated/*.srm .
+    if [ "${#tables[@]}" -gt 1 ]; then
+        create_autoload_srm "${tables[@]}"
+    fi
 
     cd ../setup
-
-    
-}
-
-read_tables_from_tables()
-{
-    local IFS=$'\n'
-    local -a tables
-    local -a words
-    local -i cwords
-    local -a lines=( $( grep -i 'CREATE TABLE' tables.sql ) )
-    IFS=$' '
-    local line
-
-    for line in "${lines[@]}"; do
-        words=( $line )
-        cwords="${#words[@]}"
-        
-        tables=( "${tables[@]}" "${words[${words}-1]}" )
-    done
-
-    echo "There are ${#tables[@]} table definitions" >&2
-    printf "'\s'\n" "${tables[@]}" >&2
-
 }
 
 load_scripts()
@@ -137,12 +139,11 @@ load_scripts()
 create_missing_directories
 install_framework_to_site
 
-# create_database
-# load_scripts                # Load the sole SQL script, tables.sql, prior to using gensfw
+create_database
+load_scripts                # Load the sole SQL script, tables.sql, prior to using gensfw
 
-# create_gsfs_from_tables_in_database
+create_gsfs_from_tables_in_database
 
 
-# prepare_generated_files
 # load_scripts                # reload scripts, which will now include Person.sql
 
