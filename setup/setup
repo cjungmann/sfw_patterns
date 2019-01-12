@@ -48,7 +48,6 @@ create_database()
     )
 
     local -i is_installed=$( mysql "${cmd[@]}" )
-    echo $is_installed
 
     if [ $is_installed -eq 0 ]; then
         echo "Creating a new database"
