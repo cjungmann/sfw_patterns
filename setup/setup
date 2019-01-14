@@ -1,6 +1,18 @@
 #!/bin/bash
 
-dbase=SFW_Simple
+dbase=SFW_Patterns
+
+remove_from_array()
+{
+    local needle="${1}"
+    local haystack="${@:2}"
+    local straw
+    for straw in "${haystack[@]}"; do
+        if [ "$straw" != "$needle" ]; then
+            echo "$straw"
+        fi
+    done
+}
 
 create_missing_directories()
 {
@@ -13,13 +25,17 @@ create_missing_directories()
         echo "Creating directory 'site'" >&2
         mkdir site
     fi
+    if [ ! -d custom ]; then
+        echo "Creating directory 'custom'" >&2
+        mkdir custom
+    fi
 
     cd setup
 }
 
 copy_and_modify_default_stylesheet()
 {
-    sed "s|\*\*Default.*\*\*|${dbase} Demo|g" /usr/local/lib/schemafw/default.xsl > ../site/default.xsl
+    sed "s|\*\*Default.*\*\*|Schema Framework Code Patterns|g" /usr/local/lib/schemafw/default.xsl > ../site/default.xsl
 }
 
 install_framework_to_site()
@@ -48,7 +64,6 @@ create_database()
     )
 
     local -i is_installed=$( mysql "${cmd[@]}" )
-    echo $is_installed
 
     if [ $is_installed -eq 0 ]; then
         echo "Creating a new database"
@@ -58,22 +73,20 @@ create_database()
     fi
 }
 
-create_generated_files()
-{
-    local tname
-    for tname in "${@}"; do
-        gensfw -d "${dbase}" -t "${tname}" -c save
-    done
-}
 
 create_autoload_srm()
 {
+    cd ../site
+
     local -a lines=(
         "\$shared : autoload_page"
         "   navigation")
 
+    local -a srmfiles=( $( ls *.srm ) )
+    local -a files=( $( remove_from_array "autorun.srm" "${srmfiles[@]}" ) )
+
     local tname
-    for tname in "${@}"; do
+    for tname in "${files[@]}"; do
         lines=( "${lines[@]}"
                 "      target"
                 "         label : ${tname}"
@@ -82,39 +95,17 @@ create_autoload_srm()
     done
 
     printf "%s\n" "${lines[@]}" > autoload.srm
+
+    cd ../setup
 }
 
-create_and_distribute_generated_files()
+distribute_custom_files()
 {
-    local table
-    local -a tables
-    local -a query=(
-        "SELECT TABLE_NAME"
-        "FROM information_schema.TABLES"
-        "WHERE TABLE_SCHEMA='${dbase}'"
-        "AND NOT( TABLE_NAME = 'SSYS_SESSION')"
-        "ORDER BY CREATE_TIME"
-        )
-
-    tables=( $( mysql -BN -e "${query[*]}" ) )
-
-    echo -n "About to process tables" >&2
-    printf " '%s'" "${tables[@]}" >&2
-    echo >&2
-
-    cd ../generated
-    create_generated_files "${tables[@]}"
-
-    cd ../setup
-    cp -fs ../generated/*.sql .
-
     cd ../site
-    cp -fs ../generated/*.srm .
-    if [ "${#tables[@]}" -gt 1 ]; then
-        create_autoload_srm "${tables[@]}"
-    fi
+    cp -s ../custom/*.srm .
 
     cd ../setup
+    cp -s ../custom/*.sql .
 }
 
 load_scripts()
@@ -135,8 +126,6 @@ create_missing_directories
 install_framework_to_site
 
 create_database
-load_scripts                # Load the sole SQL script, tables.sql, prior to using gensfw
-
-create_and_distribute_generated_files
-load_scripts                # reload scripts, which will now include Person.sql
-
+distribute_custom_files
+create_autoload_srm
+load_scripts
