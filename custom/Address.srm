@@ -1,0 +1,112 @@
+$database       : SFW_Patterns
+$xml-stylesheet : default.xsl
+$default-mode   : list
+
+$shared : common_fields
+   field : id
+      readOnly : true
+      hidden   : true
+   field : type
+      label : Property Type
+      enum  : Address:type
+   field : street
+      label : Street Address
+   field : city
+      label : City
+
+$shared : form_fields
+   field : state
+      label : State
+      type  : select_result
+      result: states
+      show  : name
+   siblings : $common_fields
+
+$shared : table_fields
+   field : state
+      label : State
+      type  : select_result
+      result: states
+      show  : abbreviation
+   siblings : $common_fields
+
+$shared : state_lookup
+   name   : states
+   schema : state
+        
+
+list
+   type          : table
+   procedure     : App_Address_List
+   title         : Address Management
+   autoload_tag  : page
+   on_line_click : ?edit&id={!id}
+   button
+      type  : add
+      label : Create Address
+      task  : ?add
+   result : 1
+      schema
+         siblings: $table_fields
+   result : 2
+      siblings : $state_lookup
+   
+
+add
+   type         : form-new
+   schema-proc  : App_Address_Add
+   procedure    : App_Address_State_Lookup
+   form-action  : ?add_submit
+   title        : Add Address-ee-poo
+   autoload_tag : dialog
+   schema
+      siblings: $form_fields
+   result
+      siblings : $state_lookup
+      
+
+add_submit
+   type      : form-submit
+   procedure : App_Address_Add
+   result : 1
+      type : update
+
+read
+   type      : form-view
+   procedure : App_Address_Read
+   result : 1
+      schema
+         siblings : $form_fields
+   result : 2
+      siblings : $state_lookup
+
+edit
+   type         : form-edit
+   schema-proc  : App_Address_Update
+   procedure    : App_Address_Value
+   title        : Edit Address
+   form-action  : ?edit_submit
+   autoload_tag : dialog
+   # Note that the schema with the labels and field
+   # type="select_result" is associated with the procedure
+   # that accepts the data (schema-proc:App_Address_Update).
+   schema
+      button
+         type    : delete
+         label   : Delete
+         confirm : Delete
+         task    : ?delete&id={@id}
+      siblings: $form_fields
+   result : 1
+   result : 2
+      siblings : $state_lookup
+
+edit_submit
+   type      : form-submit
+   procedure : App_Address_Update
+   result
+      type : update
+
+delete
+   type      : delete
+   procedure : App_Address_Delete
