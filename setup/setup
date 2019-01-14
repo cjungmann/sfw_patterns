@@ -5,7 +5,7 @@ dbase=SFW_Patterns
 remove_from_array()
 {
     local needle="${1}"
-    local haystack="${@:2}"
+    local haystack=( "${@:2}" )
     local straw
     for straw in "${haystack[@]}"; do
         if [ "$straw" != "$needle" ]; then
@@ -85,13 +85,16 @@ create_autoload_srm()
     local -a srmfiles=( $( ls *.srm ) )
     local -a files=( $( remove_from_array "autorun.srm" "${srmfiles[@]}" ) )
 
-    local tname
-    for tname in "${files[@]}"; do
-        lines=( "${lines[@]}"
-                "      target"
-                "         label : ${tname}"
-                "         url   : ${tname}.srm"
-              )
+    local sname bname
+    for sname in "${files[@]}"; do
+        if [[ "${sname}" =~ (.*)\.srm ]]; then
+            tname="${BASH_REMATCH[1]}"
+            lines=( "${lines[@]}"
+                    "      target"
+                    "         label : ${tname}"
+                    "         url   : ${sname}"
+                  )
+        fi
     done
 
     printf "%s\n" "${lines[@]}" > autoload.srm
