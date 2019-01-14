@@ -1,17 +1,9 @@
 SET default_storage_engine=InnoDB;
 
-CREATE TABLE IF NOT EXISTS Person
-(
-   id    INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-   fname VARCHAR(20),
-   lname VARCHAR(30),
-   phone VARCHAR(20),
-   email VARCHAR(128)
-);
-
 CREATE TABLE IF NOT EXISTS Address
 (
    id     INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+   zone   ENUM('residential','commercial','industrial','agricultural','rural','combination','historic','aesthetic'),
    street VARCHAR(50),
    city   VARCHAR(30),
    state  VARCHAR(30)

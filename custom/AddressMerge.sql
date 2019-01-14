@@ -12,7 +12,7 @@ DROP PROCEDURE IF EXISTS App_AddressMerge_List $$
 CREATE PROCEDURE App_AddressMerge_List(id INT UNSIGNED)
 BEGIN
    SELECT a.id,
-          a.type,
+          a.zone,
           a.street,
           a.city,
           a.state
@@ -24,7 +24,7 @@ END  $$
 
 -- ----------------------------------------
 DROP PROCEDURE IF EXISTS App_AddressMerge_Add $$
-CREATE PROCEDURE App_AddressMerge_Add(type VARCHAR(12),
+CREATE PROCEDURE App_AddressMerge_Add(zone VARCHAR(12),
                                  street VARCHAR(50),
                                  city VARCHAR(30),
                                  state VARCHAR(30))
@@ -33,11 +33,11 @@ BEGIN
    DECLARE rcount INT UNSIGNED;
 
    INSERT INTO Address
-          (type, 
+          (zone, 
            street, 
            city, 
            state)
-   VALUES (type, 
+   VALUES (zone, 
            street, 
            city, 
            state);
@@ -55,7 +55,7 @@ DROP PROCEDURE IF EXISTS App_AddressMerge_Read $$
 CREATE PROCEDURE App_AddressMerge_Read(id INT UNSIGNED)
 BEGIN
    SELECT a.id,
-          a.type,
+          a.zone,
           a.street,
           a.city,
           a.state
@@ -69,7 +69,7 @@ DROP PROCEDURE IF EXISTS App_AddressMerge_Value $$
 CREATE PROCEDURE App_AddressMerge_Value(id INT UNSIGNED)
 BEGIN
    SELECT a.id,
-          a.type,
+          a.zone,
           a.street,
           a.city,
           a.state
@@ -81,13 +81,13 @@ END $$
 -- -------------------------------------------
 DROP PROCEDURE IF EXISTS App_AddressMerge_Update $$
 CREATE PROCEDURE App_AddressMerge_Update(id INT UNSIGNED,
-                                    type VARCHAR(12),
+                                    zone VARCHAR(12),
                                     street VARCHAR(50),
                                     city VARCHAR(30),
                                     state VARCHAR(30))
 BEGIN
    UPDATE Address a
-      SET a.type = type,
+      SET a.zone = zone,
           a.street = street,
           a.city = city,
           a.state = state

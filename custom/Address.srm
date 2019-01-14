@@ -6,9 +6,9 @@ $shared : common_fields
    field : id
       readOnly : true
       hidden   : true
-   field : type
-      label : Property Type
-      enum  : Address:type
+   field : zone
+      label : Zoning Category
+      enum  : Address:zone
    field : street
       label : Street Address
    field : city
