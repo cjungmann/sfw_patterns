@@ -1,18 +1,15 @@
 #!/bin/bash
 
-find_array_index()
+remove_from_array()
 {
-    local needle="$1"
-    local -i ndx=0
-    local elval
-    for elval in "${@:2}"; do
-        if [ "$elval" = "$needle" ]; then
-            echo "${ndx}"
-            return 0
+    local needle="${1}"
+    local haystack=( "${@:2}" )
+    local straw
+    for straw in "${haystack[@]}"; do
+        if [ "$straw" != "$needle" ]; then
+            echo "$straw"
         fi
-        (( ++ndx ))
     done
-    return 1
 }
 
 confirm_database()
@@ -62,19 +59,14 @@ remove_setup_sqls()
 
     cd ../setup
     local -a files=( $( ls *.sql ) )
-    local -i ndx
+    local -a sqlfiles=( $( remove_from_array "tables.sql" "${files[@]}" ) )
 
-    if ndx=$( find_array_index "tables.sql" "${files[@]}" ); then
-        unset files[$ndx]
-        sql_files=( "${files[@]}" )
-    fi
-
-    if [ "${#files[@]}" -gt 0 ]; then
+    if [ "${#sqlfiles[@]}" -gt 0 ]; then
         echo -n "Removing"
-        printf " '%s'" "${files[@]}"
+        printf " '%s'" "${sqlfiles[@]}"
         echo " from the 'setup' directory."
 
-        rm "${files[@]}"
+        rm "${sqlfiles[@]}"
     fi
 }
 
@@ -110,30 +102,11 @@ remove_site_stuff()
     fi
 }
 
-remove_generated_files()
-{
-    echo "Looking for 'generated' files to delete."
-
-    cd ../generated
-
-    local -a files=( $( ls ) )
-
-    if [ "${#files[@]}" -gt 0 ]; then
-        echo -n "Removing"
-        printf " '%s'" "${files[@]}"
-        echo " from the 'generated' directory."
-
-        rm "${files[@]}"
-    fi
-
-    cd ../site
-}
 
 remove_database
 
 remove_setup_sqls
 remove_site_stuff
-remove_generated_files
 
 
 
