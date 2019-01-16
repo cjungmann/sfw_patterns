@@ -2,6 +2,18 @@
 
 dbase=SFW_Simple
 
+remove_from_array()
+{
+    local needle="${1}"
+    local haystack=( "${@:2}" )
+    local straw
+    for straw in "${haystack[@]}"; do
+        if [ "$straw" != "$needle" ]; then
+            echo "$straw"
+        fi
+    done
+}
+
 create_missing_directories()
 {
     cd ..
@@ -120,7 +132,8 @@ load_scripts()
 {
     cd ../setup
 
-    declare -a scripts=( $( ls --hide=tables*.sql *.sql ) )
+    local -a sqlfiles=( $( ls *.sql ) )
+    local -a scripts=( $( remove_from_array "tables.sql" "${sqlfiles[@]}" ) )
 
     mysql "$dbase" < tables.sql
 
