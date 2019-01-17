@@ -1,0 +1,190 @@
+#!/bin/bash
+
+show_usage()
+{
+    echo "\
+This command, fake_merge, takes several parameters representing two
+calls to schema.fcgi separated by '--', combining the results with
+the second resultset modified to be a merged document in the first
+resultset.
+
+The purpose of this utility is to easily generate a merged file
+to make it easier to debug XSLT stylesheet development.
+"
+
+    echo
+    echo "The following example:"
+    echo "$ ./fake_merge AddressMerge.srm -- AddressMerge.srm -m add"
+    echo
+    echo "Will run with arguments before the '--'"
+    echo "schema.fcgi AddressMerge.srm"
+    echo "...then inserting as a merge from arguments after the '--'"
+    echo "schema.fcgi AddressMerge.srm -m add"
+    echo
+    echo "The resulting document will have the same contents as if"
+    echo "it had been run within the browser."
+    echo 
+    echo "Save the output to a file:"
+    echo "$ ./fake_merge AddressMerge.srm -- AddressMerge.srm - add > merge_test.xml"
+    echo "or (with pretty formatting):"
+    echo "$ ./fake_merge AddressMerge.srm -- AddressMerge.srm - add | xmllint --format - > merge_test.xml"
+    echo
+    echo "Or translate immediately:"
+    echo "$ ./fake_merge AddressMerge.srm -- AddressMerge.srm - add | xsltproc default.xsl -"
+    echo
+}
+
+# Command argument sorting functions:
+get_before()
+{
+    local val
+    for val in "${@}"; do
+        if [ $val = '--' ]; then
+            return 0
+        else
+            echo "${val}"
+        fi
+    done;
+}
+
+get_after()
+{
+    local sending_flag=0
+
+    sending() { [ $sending_flag -eq 1 ]; }
+    
+
+    local val
+    for val in "${@}"; do
+        if sending; then
+            echo "${val}"
+        elif [ $val = '--' ]; then
+            sending_flag=1
+        fi
+    done;
+}
+
+# Sorting command line arguments:
+declare -a before_args=( $( get_before "${@}" ) )
+declare -a after_args=( $( get_after "${@}" ) )
+
+OIFS="$IFS"
+IFS=$'\n'
+
+declare -a lines_main=( $( schema.fcgi "${before_args[@]}" ) )
+declare -a lines_merge=( $( schema.fcgi "${after_args[@]}" ) )
+
+
+# Flag and flag-setting function:
+IFS="${OIFS}"
+
+declare -i before_main_break=1
+set_before_break_flag() { before_main_break=0; }
+
+declare re_element='<([[:alpha:]][[:alpha:][:digit:]]+)'
+declare re_result=$re_element'.*rndx='
+declare re_result_old=$re_element'.*[[:space:]]rndx=\"[[:digit:]+]\"'
+
+# Boolean, State-reporting functions:
+is_before_main_break()  { [ $before_main_break -ne 0 ]; }
+is_result_line()        { [[ "$1" =~ $re_result ]]; }
+is_schema_line()        { [[ "$1" =~ '<schema' ]]; }
+is_pinst_line()         { [[ "$1" =~ '<?xml' ]]; }
+
+declare roottag
+declare rootend
+
+# This function includes two side effects: it sets a flag
+# to indicate that the root element has been found, and
+# creates a regexp to identify the closing tag.
+is_root_line()
+{
+    local re='<([[:alpha:]][[:alpha:][:digit:]]+)'
+    if [ -z $roottag ]; then
+        if ! is_pinst_line "$1"; then
+            if [[ "$1" =~ $re_element ]]; then
+                roottag="${BASH_REMATCH[1]}"
+                rootend="</${roottag}>"
+                return 0
+            fi
+        fi
+    elif [[ "$1" =~ $rootend ]]; then
+        return 0
+    fi
+
+    return 1
+}
+
+add_merge_to_line()
+{
+    local -a parts=( $( echo $line ) )
+    parts=( "${parts[0]}" "merged=\"1\"" "${parts[@]:1}" )
+    echo "${parts[*]}"
+}
+
+
+# Merge processing function
+insert_merged()
+{
+    local line;
+    declare resulttag
+    declare resultend
+
+    local -i in_result_flag
+    set_in_result_flag()   { in_result_flag=1; }
+    clear_in_result_flag() { in_result_flag=0; }
+    is_in_result()         { [ $in_result_flag -ne 0 ]; }
+
+    clear_in_result_flag
+
+    for line in "${lines_merge[@]}"; do
+        if is_pinst_line "$line"; then
+            continue
+        elif is_root_line "$line"; then
+            continue
+        elif is_in_result; then
+            # Don't modify anything contained in a result, but
+            # clear the flag if we've encounted the end of the result:
+            if [[ "$line" =~ ${resultend} ]]; then
+                clear_in_result_flag
+                resultend=
+            fi
+            echo "$line"
+        elif is_result_line "$line"; then
+            resulttag="${BASH_REMATCH[1]}"
+            resultend="</[[:space:]]*$resulttag>"
+            set_in_result_flag
+            add_merge_to_line "$line"
+        elif is_schema_line "$line"; then
+            add_merge_to_line "$line"
+        else
+            echo "$line"
+        fi
+    done
+}
+
+
+process_main_file()
+{
+    declare line
+    for line in "${lines_main[@]}"; do
+        if is_before_main_break; then
+            if is_result_line "$line" || is_schema_line "$line"; then
+                set_before_break_flag
+                insert_merged
+            fi
+        fi
+
+        echo "${line}"
+    done
+}
+
+
+if [ ${#} -lt 3 ]; then
+    show_usage
+else
+    # insert_merged
+    process_main_file
+fi
+
+
