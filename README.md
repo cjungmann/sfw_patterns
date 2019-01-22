@@ -1,18 +1,16 @@
-# SFW_Simple Project
+# SFW_Patterns Project
 
 ## Introduction
 
-Although this project is a good starting point for learning how
-to create Schema Framework applications, is is the third project
-of a series of SchemaFW demonstration projects that use tools from
-[gensfw](https://github.com/cjungmann/gensfw) to generate scripts
-that can be used for development and, in this case, useful examples
-for learning how to use the Schema Framework.
+This project is projected to be a repository of coding patterns
+for several interaction types.  The first patterns are methods
+for generating drop-down lists from ENUM fields and lookup tables.
+More patterns will follow as I rediscover them during development.
 
-Although this is the third such project, it illustrates the basic
-conventions that SchemaFW projects should follow.  I also hope to
-use the *setup*, *unsetup*, and *apache_set* scripts as templates
-for subsequent demonstration projects.
+A better project for learning about the Schema Framework si
+[sfw_simple.git](https://github.com/cjungmann/sfw_simple).
+There you will find mentions of utilities that help in developing
+framework applications.
 
 ## Warning
 
@@ -22,7 +20,7 @@ running the scripts.  These are the protected areas that are
 changed:
 
 - The **setup** makes the following environment changes:
-  - Adds a database, by default *SFW_Simple* to MySQL.
+  - Adds a database, by default *SFW_Patterns* to MySQL.
     The database name can be changed near the top of the
     **setup** script.
   - Creates a *site* directory with a modified *default.xsl*
@@ -60,8 +58,8 @@ setup the demonstration application.
 
    ~~~sh
    user:~$ cd ~/www
-   user:~/www$ git clone https://github.com/cjungmann/sfw_simple.git
-   user:~/www$ cd sfw_simple/setup
+   user:~/www$ git clone https://github.com/cjungmann/sfw_patterns.git
+   user:~/www$ cd sfw_patterns/setup
    ~~~
 
 1. Do the MySQL setup first because the tables that are
@@ -69,7 +67,7 @@ setup the demonstration application.
    *DirectoryIndex* configuration value.
 
    ~~~sh
-   user:~/www/sfw_simple/setup$ ./setup
+   user:~/www/sfw_patterns/setup$ ./setup
    ~~~
 
 1. Configure Apache to direct requests to the new site.  Note
@@ -80,7 +78,7 @@ setup the demonstration application.
      figure out another way to direct requests.)
 
       ~~~sh
-      user:~/www/sfw_simple/setup$ sudo ./apache_set install
+      user:~/www/sfw_patterns/setup$ sudo ./apache_set install
       ~~~
 
    - Add entry to */etc/hosts*.  The script will present
@@ -90,14 +88,14 @@ setup the demonstration application.
      anything else will abandon the changes to */etc/hosts*.
 
      ~~~sh
-     user:~/www/sfw_simple/setup$ sudo ./apache_set install -h
+     user:~/www/sfw_patterns/setup$ sudo ./apache_set install -h
      ~~~
 
 1. Test Configuration
 
    Especially if you have used the *-h* option to update
    the */etc/hosts* file, open a browser and navigate to
-   *http://sfw_simple*.
+   *http://sfw_patterns*.
 
 ## Uninstall the Project
 
@@ -110,7 +108,7 @@ executed in the following order:
    to **apache_set** script:
 
    ~~~sh
-   user:~/www/sfw_simple/setup$ sudo ./apache_set uninstall -h
+   user:~/www/sfw_patterns/setup$ sudo ./apache_set uninstall -h
    ~~~
 
    With the *-h* option, the script displays the differences
@@ -128,7 +126,7 @@ executed in the following order:
    **apache_set**:
 
    ~~~sh
-   user:~/www/sfw_simple/setup$ unsetup
+   user:~/www/sfw_patterns/setup$ unsetup
    ~~~
 
 ## Earlier Projects
