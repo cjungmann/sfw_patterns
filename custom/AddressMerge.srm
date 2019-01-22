@@ -17,25 +17,38 @@ $shared : common_fields
 $shared : form_fields
    field : state
       label : State
-      # type  : select_result
-      type  : ulselect
+      type    : selectx
       result: states
       show  : name
+   field : klist
+      label  : Keywords
+      type   : selectx
+      style  : multiple
+      result : keywords
    siblings : $common_fields
 
 $shared : table_fields
    field : state
-      label : State
-      # type  : select_result
-      type  : ulselect
-      result: states
-      show  : abbreviation
-   siblings : $common_fields
+      label  : State
+      type   : selectx
+      result : states
+      show   : abbreviation
+   field : klist
+      label  : Keywords
+      type   : selectx
+      style  : multiple
+      result : keywords
+   siblings  : $common_fields
 
 $shared : state_lookup
    name   : states
    lookup : id
    schema : state
+
+$shared : keyword_lookup
+   name   : keywords
+   lookup : id
+   schema : keyword
         
 
 list
@@ -53,12 +66,13 @@ list
          siblings: $table_fields
    result : 2
       siblings : $state_lookup
+   result : 3
+      siblings : $keyword_lookup
    
 
 add
    type         : merge
    schema-proc  : App_AddressMerge_Add
-   procedure    : App_AddressMerge_State_Lookup
    form-action  : ?add_submit
    title        : Add Address-ee-poo
    autoload_tag : dialog
@@ -81,7 +95,7 @@ read
          siblings : $form_fields
 
 edit
-   type         : form-edit
+   type         : merge
    schema-proc  : App_AddressMerge_Update
    procedure    : App_AddressMerge_Value
    title        : Edit Address
@@ -91,6 +105,7 @@ edit
    # type="select_result" is associated with the procedure
    # that accepts the data (schema-proc:App_AddressMerge_Update).
    schema
+      merge-type : form-edit
       button
          type    : delete
          label   : Delete
