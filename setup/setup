@@ -14,6 +14,18 @@ remove_from_array()
     done
 }
 
+remove_from_array()
+{
+    local needle="${1}"
+    local haystack=( "${@:2}" )
+    local straw
+    for straw in "${haystack[@]}"; do
+        if [ "$straw" != "$needle" ]; then
+            echo "$straw"
+        fi
+    done
+}
+
 create_missing_directories()
 {
     cd ..
