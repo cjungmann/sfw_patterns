@@ -105,17 +105,18 @@ create_autoload_srm()
 distribute_custom_files()
 {
     cd ../site
-    cp -s ../custom/*.srm .
+    cp -sf ../custom/*.srm .
 
     cd ../setup
-    cp -s ../custom/*.sql .
+    cp -sf ../custom/*.sql .
 }
 
 load_scripts()
 {
     cd ../setup
 
-    declare -a scripts=( $( ls --hide=tables*.sql *.sql ) )
+    local -a sqlfiles=( $( ls *.sql ) )
+    local -a scripts=( $( remove_from_array "tables.sql" "${sqlfiles[@]}" ) )
 
     mysql "$dbase" < tables.sql
 
