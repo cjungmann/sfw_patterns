@@ -95,7 +95,7 @@ create_autoload_srm()
         "   navigation")
 
     local -a srmfiles=( $( ls *.srm ) )
-    local -a files=( $( remove_from_array "autorun.srm" "${srmfiles[@]}" ) )
+    local -a files=( $( remove_from_array "autoload.srm" "${srmfiles[@]}" ) )
 
     local sname bname
     for sname in "${files[@]}"; do
