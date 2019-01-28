@@ -25,6 +25,12 @@ $shared : form_fields
       type   : selectx
       style  : multiple
       result : keywords
+   field : flist
+      label  : Features
+      type   : selectx
+      style  : multiple
+      ranked : true
+      result : features
    siblings : $common_fields
 
 $shared : table_fields
@@ -38,6 +44,12 @@ $shared : table_fields
       type   : selectx
       style  : multiple
       result : keywords
+   field : flist
+      label  : Features
+      type   : selectx
+      style  : multiple
+      ranked : true
+      result : features
    siblings  : $common_fields
 
 $shared : state_lookup
@@ -49,6 +61,17 @@ $shared : keyword_lookup
    name   : keywords
    lookup : id
    schema : keyword
+      on_add : Keyword.srm?add
+      field : value
+         use_preset : true
+
+$shared : feature_lookup
+   name   : features
+   lookup : id
+   schema : feature
+     on_add : Feature.srm?add
+     field  : value
+        use_preset : true
         
 
 list
@@ -68,6 +91,8 @@ list
       siblings : $state_lookup
    result : 3
       siblings : $keyword_lookup
+   result : 4
+      siblings : $feature_lookup
    
 
 add
