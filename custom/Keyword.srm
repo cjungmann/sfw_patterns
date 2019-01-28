@@ -27,6 +27,9 @@ add
    title        : Add Keyword
    autoload_tag : dialog
    schema
+      field : value
+         label         : Keyword
+         preset_target : true
 
 add_submit
    type      : form-submit
@@ -42,6 +45,8 @@ read
          field : id
             readOnly : true
             hidden   : true
+         field : value
+            label : Keyword
 
 edit
    type         : form-edit
