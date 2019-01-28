@@ -23,6 +23,21 @@ CREATE TABLE IF NOT EXISTS Keyword2Address
    INDEX(id_address)
 );
 
+CREATE TABLE IF NOT EXISTS Feature
+(
+   id    INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+   value VARCHAR(30)
+);
+
+CREATE TABLE IF NOT EXISTS Feature2Address
+(
+   id_feature INT UNSIGNED,
+   id_address INT UNSIGNED,
+   position   TINYINT UNSIGNED,
+   INDEX(id_feature),
+   INDEX(id_address)
+);
+
 -- We only want a single set of states,
 -- so drop, recreate, and repopulate.
 DROP TABLE IF EXISTS State;
