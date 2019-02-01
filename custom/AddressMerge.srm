@@ -16,10 +16,10 @@ $shared : common_fields
 
 $shared : form_fields
    field : state
-      label : State
-      type    : selectx
-      result: states
-      show  : name
+      label  : State
+      type   : selectx
+      result : states
+      show   : name
    field : klist
       label  : Keywords
       type   : selectx
@@ -80,12 +80,12 @@ list
    title         : Address Management
    autoload_tag  : page
    on_line_click : ?edit&id={!id}
-   button
-      type  : add
-      label : Create Address
-      task  : ?add
    result : 1
       schema
+         button
+            type  : add
+            label : Create Address
+            task  : ?add
          siblings: $table_fields
    result : 2
       siblings : $state_lookup
@@ -99,7 +99,7 @@ add
    type         : merge
    schema-proc  : App_AddressMerge_Add
    form-action  : ?add_submit
-   title        : Add Address-ee-poo
+   title        : Add Address
    autoload_tag : dialog
    schema
       merge-type   : form-new
