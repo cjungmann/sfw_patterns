@@ -78,7 +78,8 @@ BEGIN
           LEFT JOIN Keyword2Address k ON k.id_address = a.id
           LEFT JOIN Feature2Address f ON f.id_address = a.id
     WHERE (id IS NULL OR a.id = id)
-    GROUP BY a.id, a.zone, a.street, a.state;
+    GROUP BY a.id;
+--    GROUP BY a.id, a.zone, a.street, a.state;
 
     CALL App_AddressMerge_State_Lookup();
     CALL App_AddressMerge_Keyword_Lookup();
@@ -129,7 +130,7 @@ BEGIN
           a.city,
           a.state,
           GROUP_CONCAT(DISTINCT k.id_keyword) AS klist,
-          GROUP_CONCAT(DISTINCT f.id_feature) AS flist
+          GROUP_CONCAT(DISTINCT f.id_feature ORDER BY f.position) AS flist
      FROM Address a
           LEFT JOIN Keyword2Address k ON k.id_address=a.id
           LEFT JOIN Feature2Address f ON f.id_address=a.id
@@ -148,7 +149,7 @@ BEGIN
           a.city,
           a.state,
           GROUP_CONCAT(DISTINCT k.id_keyword) AS klist,
-          GROUP_CONCAT(DISTINCT f.id_feature) AS flist
+          GROUP_CONCAT(DISTINCT f.id_feature ORDER BY f.position) AS flist
      FROM Address a
           LEFT JOIN Keyword2Address k ON k.id_address=a.id
           LEFT JOIN Feature2Address f ON f.id_address=a.id
