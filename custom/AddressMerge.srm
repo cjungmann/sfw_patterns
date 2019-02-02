@@ -85,7 +85,7 @@ list
          button
             type  : add
             label : Create Address
-            task  : ?add
+            url   : ?add
          siblings: $table_fields
    result : 2
       siblings : $state_lookup
