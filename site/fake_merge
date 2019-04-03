@@ -25,12 +25,12 @@ to make it easier to debug XSLT stylesheet development.
     echo "it had been run within the browser."
     echo 
     echo "Save the output to a file:"
-    echo "$ ./fake_merge AddressMerge.srm -- AddressMerge.srm - add > merge_test.xml"
+    echo "$ ./fake_merge AddressMerge.srm -- AddressMerge.srm -m add > merge_test.xml"
     echo "or (with pretty formatting):"
-    echo "$ ./fake_merge AddressMerge.srm -- AddressMerge.srm - add | xmllint --format - > merge_test.xml"
+    echo "$ ./fake_merge AddressMerge.srm -- AddressMerge.srm -m add | xmllint --format - > merge_test.xml"
     echo
     echo "Or translate immediately:"
-    echo "$ ./fake_merge AddressMerge.srm -- AddressMerge.srm - add | xsltproc default.xsl -"
+    echo "$ ./fake_merge AddressMerge.srm -- AddressMerge.srm -m add | xsltproc default.xsl -"
     echo
 }
 
